@@ -1,3 +1,5 @@
+//import 'dart:html';
+
 import 'package:flutter/material.dart';
 
 import 'models/item.dart';
@@ -23,12 +25,17 @@ class MyApp extends StatelessWidget {
 
 class HomePage extends StatefulWidget {
   var items = new List<Item>();
+  var financeItems = new List<Item>();
 
   HomePage() {
     items = [];
     items.add(Item(title: "Tarefa de Cálculo", done: true));
     items.add(Item(title: "Aprender Dart", done: true));
     items.add(Item(title: "Limpar a casa", done: false));
+  }
+
+  FinanceList() {
+    financeItems = [];
   }
 
   @override
@@ -38,39 +45,111 @@ class HomePage extends StatefulWidget {
 class _HomePageState extends State<HomePage> {
   var newTaskController = TextEditingController();
 
+  void add() {
+    showModalBottomSheet(
+        context: context,
+        builder: (BuildContext bc) {
+          return Container(
+            child: Wrap(
+              children: <Widget>[
+                TextField(
+                  decoration: InputDecoration(
+                    border: InputBorder.none,
+                    icon: Icon(Icons.send),
+                    hintText: 'Informe a tarefa',
+                    fillColor: Colors.lightBlue,
+                  ),
+                  controller: newTaskController,
+                  onSubmitted: (value) {
+                    setState(() {
+                      widget.items.add(
+                          Item(title: newTaskController.text, done: false));
+                      newTaskController.clear();
+                    });
+                  },
+                ),
+                FlatButton(
+                  onPressed: () {
+                    setState(() {
+                      widget.items.add(
+                          Item(title: newTaskController.text, done: false));
+                      newTaskController.clear();
+                    });
+                  },
+                  child: Text("Pronto"),
+                  color: Colors.green,
+                )
+              ],
+            ),
+            height: 1000,
+          );
+        });
+
+    // setState(() {
+    //   widget.items.add(Item(title: newTaskController.text, done: false));
+    //   newTaskController.clear();
+    // });
+  }
+
+  void removeTask(int index) {
+    setState(() {
+      widget.items.removeAt(index);
+    });
+  }
+
+  //////////////////////////////BottomNavigation
+  int _selectedIndex = 0;
+
+  void _onItemTapped(int index) {
+    setState(() {
+      _selectedIndex = index;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: TextFormField(
-          controller: newTaskController,
-          keyboardType: TextInputType.text,
-          style: TextStyle(color: Colors.white, fontSize: 18),
-          decoration: InputDecoration(
-              labelText: "Nova Tarfefa",
-              labelStyle: TextStyle(color: Colors.white)),
+        title: Text(
+          _selectedIndex == 0 ? "Lista de Tarefas" : "Suas Finanças",
+          style: TextStyle(color: Colors.white),
         ),
       ),
-      body: ListView.builder(
-        itemCount: widget.items.length,
-        itemBuilder: (BuildContext ctx, int index) {
-          final item = widget.items[index];
-          return CheckboxListTile(
-            title: Text(item.title),
-            key: Key(item.title),
-            value: item.done,
-            onChanged: (value) {
-              setState(() {
-                item.done = value;
-              });
-            },
-          );
-        },
-      ),
+      body: _selectedIndex == 0
+          ? ListView.builder(
+              itemCount: widget.items.length,
+              itemBuilder: (BuildContext ctx, int index) {
+                final item = widget.items[index];
+                return CheckboxListTile(
+                  title: Text(item.title),
+                  key: Key(item.title),
+                  value: item.done,
+                  onChanged: (value) {
+                    setState(() {
+                      item.done = value;
+                    });
+                  },
+                );
+              },
+            )
+          : ListView.builder(itemBuilder: (BuildContext ctx, int index) {}),
       floatingActionButton: FloatingActionButton(
-        onPressed: () {},
+        onPressed: add,
         child: Icon(Icons.add),
-        backgroundColor: Colors.blue,
+        backgroundColor: Colors.green,
+      ),
+      bottomNavigationBar: BottomNavigationBar(
+        items: const <BottomNavigationBarItem>[
+          BottomNavigationBarItem(
+              icon: Icon(Icons.track_changes),
+              label: 'Tarefas',
+              backgroundColor: Colors.white),
+          BottomNavigationBarItem(
+              icon: Icon(Icons.attach_money), label: 'Finança')
+        ],
+        currentIndex: _selectedIndex,
+        selectedItemColor: Colors.lightBlue,
+        onTap: _onItemTapped,
       ),
     );
   }
