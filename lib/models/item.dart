@@ -1,19 +1,29 @@
+import 'package:cloud_firestore/cloud_firestore.dart';
+
 class Item {
   String title;
   bool done;
 
-  Item({this.title, this.done});
+  DocumentReference reference;
 
-  Item.fromJson(Map<String, dynamic> json) {
-    title = json['title'];
-    done = json['done'];
+  Item(this.title, {this.done, this.reference});
+
+  factory Item.fromSnapshot(DocumentSnapshot snapshot) {
+    Item newItem = Item.fromJson(snapshot.data);
+    newItem.reference = snapshot.reference;
+    return newItem;
   }
 
-  Map<String, dynamic> toJson() {
-    final Map<String, dynamic> data = new Map<String, dynamic>();
-    data['title'] = this.title;
-    data['done'] = this.done;
-    return data;
-  }
-  //Métodos toJson and fromJson --> https://javiercbk.github.io/json_to_dart/
+  factory Item.fromJson(Map<String, dynamic> json) => _ItemFromJson(json);
+
+  Map<String, dynamic> toJson() => _ItemToJson(this);
+  @override
+  String toString() => "Item<$title>";
 }
+
+Item _ItemFromJson(Map<String, dynamic> json) {
+  return Item(json['title'] as String, done: json['done'] as bool);
+}
+
+Map<String, dynamic> _ItemToJson(Item instance) =>
+    <String, dynamic>{'title': instance.title, 'done': instance.done};
