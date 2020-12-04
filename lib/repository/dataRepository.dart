@@ -26,6 +26,14 @@ class DataRepository {
     return financeCollection.add(financeItem.toJson());
   }
 
+  Future<DocumentReference> deleteTodoItem(String documentId) async {
+    await todoCollection.document(documentId).delete();
+  }
+
+  Future<DocumentReference> deleteFinanceItem(String documentId) async {
+    await financeCollection.document(documentId).delete();
+  }
+
   //Update Item class and FinanceItem class
   updateTodoItem(Item item) async {
     await todoCollection

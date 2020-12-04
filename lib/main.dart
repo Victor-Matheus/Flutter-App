@@ -27,33 +27,18 @@ class MyApp extends StatelessWidget {
 }
 
 class HomePage extends StatefulWidget {
-  // var items = new List<Item>();
-  // var financeItems = new List<FinanceItem>();
-  // /////////////////////////////////////////
-  // final DataRepository repository = DataRepository();
-
-  // void content() {}
-
-  // HomePage() {
-  //   //var item = snapshot.map((value) => value.)
-  //   items = [];
-  //   items.add(Item("Tarefa de Cálculo", done: true));
-  //   items.add(Item("Aprender Dart", done: true));
-  //   items.add(Item("Limpar a casa", done: false));
-  //   ////////////////////////////////////////////////////////////
-  //   financeItems = [];
-  //   financeItems.add(FinanceItem("Prestação do carro", 800));
-  //   financeItems.add(FinanceItem("Roupas", 150));
-  //   financeItems.add(FinanceItem("Comida", 400));
-  // }
-
   @override
   _HomePageState createState() => _HomePageState();
 }
 
 class _HomePageState extends State<HomePage> {
-  //var newTaskController = TextEditingController();
   final DataRepository repository = DataRepository();
+
+  var todoItemsDoneValue = 0;
+  var totalSpend = 0;
+  //////////////////////
+
+  bool isLoading = false;
 
   void _addTodoItem() {
     AlertDialogTodoWidget dialogWidget = AlertDialogTodoWidget();
@@ -124,100 +109,14 @@ class _HomePageState extends State<HomePage> {
   Widget build(BuildContext context) {
     return _buildHome(context);
   }
-  // Widget build(BuildContext context) {
-  //   return Scaffold(
-  //     appBar: AppBar(
-  //       title: Text(
-  //         _selectedIndex == 0 ? "Lista de Tarefas" : "Suas Finanças",
-  //         style: TextStyle(color: Colors.white),
-  //       ),
-  //     ),
-  //     body: _selectedIndex == 0
-  //         ? StreamBuilder<QuerySnapshot>(
-  //             stream: repository.getTodoStream(),
-  //             builder: (context, snapshot) {
-  //               if (!snapshot.hasData) return LinearProgressIndicator();
-  //               //HomePage(context, snapshot.data.documents);
-  //               return ListView.builder(
-  //                 itemCount: snapshot.data.documents.length,
-  //                 itemBuilder: (BuildContext ctx, int index) {
-  //                   final item = snapshot.data.documents[index];
-  //                   return CheckboxListTile(
-  //                     title: Text(item.data.toString()),
-  //                   );
-  //                 },
-  //               );
-  //             })
-  //         // ? ListView.builder(
-  //         //     itemCount: widget.items.length,
-  //         //     itemBuilder: (BuildContext ctx, int index) {
-  //         //       final item = widget.items[index];
-  //         //       return CheckboxListTile(
-  //         //         title: Text(item.title),
-  //         //         key: Key(item.title),
-  //         //         value: item.done,
-  //         //         onChanged: (value) {
-  //         //           setState(() {
-  //         //             item.done = value;
-  //         //           });
-  //         //         },
-  //         //       );
-  //         //     },
-  //         //   )
-  //         : ListView.builder(
-  //             itemCount: widget.financeItems.length,
-  //             itemBuilder: (BuildContext ctx, int index) {
-  //               final financeitem = widget.financeItems[index];
-  //               return Center(
-  //                   child: Card(
-  //                 child: Column(
-  //                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
-  //                   children: <Widget>[
-  //                     ListTile(
-  //                       leading: Icon(Icons.monetization_on_outlined),
-  //                       title: Text(financeitem.title),
-  //                       subtitle: Text(financeitem.value.toString()),
-  //                     ),
-  //                     ButtonBar(
-  //                       //overflowDirection: VerticalDirection.down,
-  //                       children: <Widget>[
-  //                         FlatButton(
-  //                           child: Icon(Icons.edit),
-  //                           onPressed: () {},
-  //                         )
-  //                       ],
-  //                     ),
-  //                   ],
-  //                 ),
-  //                 color: Colors.white,
-  //                 shadowColor: Colors.grey[850],
-  //               ));
-  //             }),
-  //     floatingActionButton: FloatingActionButton(
-  //       onPressed: add,
-  //       child: Icon(Icons.add),
-  //       backgroundColor: Colors.green,
-  //     ),
-  //     bottomNavigationBar: BottomNavigationBar(
-  //       items: const <BottomNavigationBarItem>[
-  //         BottomNavigationBarItem(
-  //             icon: Icon(Icons.track_changes),
-  //             label: 'Tarefas',
-  //             backgroundColor: Colors.white),
-  //         BottomNavigationBarItem(
-  //             icon: Icon(Icons.attach_money), label: 'Finança')
-  //       ],
-  //       currentIndex: _selectedIndex,
-  //       selectedItemColor: Colors.lightBlue,
-  //       onTap: _onItemTapped,
-  //     ),
-  //   );
-  // }
 
   Widget _buildHome(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
-          title: Text(_selectedIndex == 0 ? "Tarefas" : "Meus gastos"),
+          title: Text(
+            _selectedIndex == 0 ? "Tarefas" : "Meus gastos",
+            style: TextStyle(color: Colors.white),
+          ),
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: _selectedIndex == 0
@@ -253,6 +152,7 @@ class _HomePageState extends State<HomePage> {
   }
 
   Widget _buildList(BuildContext context, List<DocumentSnapshot> snapshot) {
+    isLoading = true;
     return ListView(
       padding: const EdgeInsets.only(top: 20.0),
       children: snapshot
@@ -269,17 +169,60 @@ class _HomePageState extends State<HomePage> {
       return Container();
     }
 
+    if (todoItem.done != null) {
+      todoItemsDoneValue =
+          todoItem.done ? todoItemsDoneValue++ : todoItemsDoneValue;
+    }
+    isLoading = false;
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0),
-      child: InkWell(
-        child: Row(
-          children: <Widget>[
-            Expanded(child: Text(todoItem.title == null ? "" : todoItem.title)),
-            Icon(Icons.today)
-          ],
-        ),
-      ),
-    );
+        padding: const EdgeInsets.symmetric(horizontal: 16.0),
+        child: Dismissible(
+            child: CheckboxListTile(
+                title: Text(todoItem.title == null ? "" : todoItem.title),
+                value: todoItem.done == null ? false : todoItem.done,
+                secondary: Icon(Icons.filter_center_focus),
+                activeColor: Colors.green,
+                onChanged: (value) {
+                  setState(() {
+                    todoItem.done = value;
+                    repository.updateTodoItem(todoItem);
+                  });
+                }),
+            key: Key(todoItem.title == null ? "" : todoItem.title),
+            direction: DismissDirection.endToStart,
+            background: Container(
+              color: Colors.red[700].withOpacity(0.85),
+              child: Stack(
+                children: <Widget>[
+                  Positioned(
+                      right: 25,
+                      top: 15,
+                      child: Icon(
+                        Icons.delete_forever,
+                        color: Colors.white,
+                      ))
+                ],
+              ),
+            ),
+            onDismissed: (direction) {
+              repository.deleteTodoItem(snapshot.documentID);
+              showDialog(
+                  barrierColor: Color(0x00000000),
+                  barrierDismissible: true,
+                  context: context,
+                  builder: (context) {
+                    Future.delayed(Duration(seconds: 2), () {
+                      Navigator.of(context).pop(true);
+                    });
+                    return AlertDialog(
+                      title: Center(child: Text("Tarefa removida")),
+                      backgroundColor: Colors.lightGreen[600],
+                      shape: RoundedRectangleBorder(
+                          borderRadius:
+                              BorderRadius.all(Radius.circular(10.0))),
+                    );
+                  });
+            }));
   }
 
   Widget _buildListFinaceItem(BuildContext context, DocumentSnapshot snapshot) {
@@ -287,6 +230,9 @@ class _HomePageState extends State<HomePage> {
     if (financeItem == null) {
       Container();
     }
+
+    AlertDialogFinanceItemWidget dialogWidget = AlertDialogFinanceItemWidget();
+
     return Container(
       child: Card(
         child: Column(
@@ -298,6 +244,79 @@ class _HomePageState extends State<HomePage> {
               subtitle: Text(financeItem.value == null
                   ? ""
                   : financeItem.value.toString()),
+              trailing: Container(
+                  width: 100,
+                  child: Row(
+                    children: <Widget>[
+                      IconButton(
+                          icon: Icon(Icons.edit),
+                          color: Colors.yellow[600],
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: const Text("Atualizar gasto"),
+                                    content: dialogWidget,
+                                    actions: <Widget>[
+                                      FlatButton(
+                                        onPressed: () {
+                                          Navigator.of(context).pop();
+                                        },
+                                        child: Text("Cancelar"),
+                                      ),
+                                      FlatButton(
+                                          onPressed: () {
+                                            financeItem.value = dialogWidget
+                                                        .financeItemValue ==
+                                                    null
+                                                ? financeItem.value
+                                                : dialogWidget.financeItemValue;
+                                            financeItem.title = dialogWidget
+                                                        .financeItemTitle ==
+                                                    null
+                                                ? financeItem.title
+                                                : dialogWidget.financeItemTitle;
+                                            dialogWidget.financeItemTitle;
+
+                                            repository
+                                                .updateFinanceItem(financeItem);
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text("Adicionar"))
+                                    ],
+                                  );
+                                });
+                          }),
+                      IconButton(
+                          icon: Icon(Icons.delete),
+                          color: Colors.red[700],
+                          onPressed: () {
+                            showDialog(
+                                context: context,
+                                builder: (BuildContext context) {
+                                  return AlertDialog(
+                                    title: Text("Excluir gasto"),
+                                    content: Text(
+                                        "Tem certeza que deseja excluir este gasto ?"),
+                                    actions: <Widget>[
+                                      FlatButton(
+                                          onPressed: () =>
+                                              Navigator.of(context).pop(false),
+                                          child: Text("Não")),
+                                      FlatButton(
+                                          onPressed: () {
+                                            repository.deleteFinanceItem(
+                                                snapshot.documentID);
+                                            Navigator.of(context).pop();
+                                          },
+                                          child: Text("Sim"))
+                                    ],
+                                  );
+                                });
+                          })
+                    ],
+                  )),
             )
           ],
         ),
@@ -349,13 +368,11 @@ class _AlertDialogFinanceItemWidgetState
         children: <Widget>[
           TextField(
             autofocus: true,
-            decoration: InputDecoration(
-                border: OutlineInputBorder(), hintText: "Título"),
+            decoration: InputDecoration(hintText: "Título"),
             onChanged: (text) => widget.financeItemTitle = text,
           ),
           TextField(
-              decoration: InputDecoration(
-                  border: OutlineInputBorder(), hintText: "Valor"),
+              decoration: InputDecoration(hintText: "Valor"),
               keyboardType: TextInputType.number,
               inputFormatters: <TextInputFormatter>[
                 FilteringTextInputFormatter.digitsOnly

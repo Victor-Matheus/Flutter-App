@@ -6,7 +6,7 @@ class Item {
 
   DocumentReference reference;
 
-  Item(this.title, {this.done, this.reference});
+  Item(this.title, {this.done = false, this.reference});
 
   factory Item.fromSnapshot(DocumentSnapshot snapshot) {
     Item newItem = Item.fromJson(snapshot.data);
