@@ -17,26 +17,29 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Todo App',
       debugShowCheckedModeBanner: false,
+      initialRoute: 'todo',
+      routes: {
+        'todo': (context) => TodoPage(),
+        'finance': (context) => FinancePage()
+      },
       theme: ThemeData(
         primarySwatch: Colors.lightBlue,
         visualDensity: VisualDensity.adaptivePlatformDensity,
       ),
-      home: HomePage(),
+      //home: TodoPage(),
     );
   }
 }
 
-class HomePage extends StatefulWidget {
+int _selectedIndex = 0;
+
+class TodoPage extends StatefulWidget {
   @override
-  _HomePageState createState() => _HomePageState();
+  _TodoPageState createState() => _TodoPageState();
 }
 
-class _HomePageState extends State<HomePage> {
+class _TodoPageState extends State<TodoPage> {
   final DataRepository repository = DataRepository();
-
-  var todoItemsDoneValue = 0;
-  var totalSpend = 0;
-  //////////////////////
 
   bool isLoading = false;
 
@@ -67,70 +70,43 @@ class _HomePageState extends State<HomePage> {
         });
   }
 
-  void _addFinanceItem() {
-    AlertDialogFinanceItemWidget dialogWidget = AlertDialogFinanceItemWidget();
-    showDialog(
-        context: context,
-        builder: (BuildContext context) {
-          return AlertDialog(
-            title: const Text("Adicionar Gasto"),
-            content: dialogWidget,
-            actions: <Widget>[
-              FlatButton(
-                onPressed: () {
-                  Navigator.of(context).pop();
-                },
-                child: Text("Cancelar"),
-              ),
-              FlatButton(
-                  onPressed: () {
-                    FinanceItem newFinanceItem = FinanceItem(
-                        dialogWidget.financeItemTitle,
-                        dialogWidget.financeItemValue);
-                    repository.addFinanceItem(newFinanceItem);
-                    Navigator.of(context).pop();
-                  },
-                  child: Text("Confirmar"))
-            ],
-          );
-        });
-  }
-
   //////////////////////////////BottomNavigation
-  int _selectedIndex = 0;
 
   void _onItemTapped(int index) {
     setState(() {
       _selectedIndex = index;
+      //_selectedIndex == 0 ? "" : Navigator.pushNamed(context, "finance");
+      if (_selectedIndex == 1) {
+        Navigator.of(context)
+            .pushNamedAndRemoveUntil("finance", (route) => false);
+      }
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return _buildHome(context);
+    return _buildTodoPage(context);
   }
 
-  Widget _buildHome(BuildContext context) {
+  Widget _buildTodoPage(BuildContext context) {
     return Scaffold(
         appBar: AppBar(
           title: Text(
-            _selectedIndex == 0 ? "Tarefas" : "Meus gastos",
+            "Tarefas",
             style: TextStyle(color: Colors.white),
           ),
+          toolbarHeight: 100,
         ),
         body: StreamBuilder<QuerySnapshot>(
-          stream: _selectedIndex == 0
-              ? repository.getTodoStream()
-              : repository.getFinanceStream(),
+          stream: repository.getTodoStream(),
           builder: (context, snapshot) {
             if (!snapshot.hasData) return LinearProgressIndicator();
-
             return _buildList(context, snapshot.data.documents);
           },
         ),
         floatingActionButton: FloatingActionButton(
           onPressed: () {
-            _selectedIndex == 0 ? _addTodoItem() : _addFinanceItem();
+            _addTodoItem();
           },
           tooltip: "Add Items",
           child: Icon(Icons.add),
@@ -155,11 +131,7 @@ class _HomePageState extends State<HomePage> {
     isLoading = true;
     return ListView(
       padding: const EdgeInsets.only(top: 20.0),
-      children: snapshot
-          .map((data) => _selectedIndex == 0
-              ? _buildListItem(context, data)
-              : _buildListFinaceItem(context, data))
-          .toList(),
+      children: snapshot.map((data) => _buildListItem(context, data)).toList(),
     );
   }
 
@@ -169,11 +141,6 @@ class _HomePageState extends State<HomePage> {
       return Container();
     }
 
-    if (todoItem.done != null) {
-      todoItemsDoneValue =
-          todoItem.done ? todoItemsDoneValue++ : todoItemsDoneValue;
-    }
-    isLoading = false;
     return Container(
         padding: const EdgeInsets.symmetric(horizontal: 16.0),
         child: Dismissible(
@@ -223,6 +190,108 @@ class _HomePageState extends State<HomePage> {
                     );
                   });
             }));
+  }
+}
+//////////////////////////////////////////////////////////////////////////////////////////////
+
+class FinancePage extends StatefulWidget {
+  @override
+  _FinancePageState createState() => _FinancePageState();
+}
+
+class _FinancePageState extends State<FinancePage> {
+  final DataRepository repository = DataRepository();
+
+  void _addFinanceItem() {
+    AlertDialogFinanceItemWidget dialogWidget = AlertDialogFinanceItemWidget();
+    showDialog(
+        context: context,
+        builder: (BuildContext context) {
+          return AlertDialog(
+            title: const Text("Adicionar Gasto"),
+            content: dialogWidget,
+            actions: <Widget>[
+              FlatButton(
+                onPressed: () {
+                  Navigator.of(context).pop();
+                },
+                child: Text("Cancelar"),
+              ),
+              FlatButton(
+                  onPressed: () {
+                    FinanceItem newFinanceItem = FinanceItem(
+                        dialogWidget.financeItemTitle,
+                        dialogWidget.financeItemValue);
+                    repository.addFinanceItem(newFinanceItem);
+                    Navigator.of(context).pop();
+                  },
+                  child: Text("Confirmar"))
+            ],
+          );
+        });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return _buildFinancePage(context);
+  }
+
+  Widget _buildFinancePage(BuildContext context) {
+    void _onItemTapped(int index) {
+      setState(() {
+        _selectedIndex = index;
+
+        if (_selectedIndex == 0) {
+          Navigator.of(context)
+              .pushNamedAndRemoveUntil("todo", (Route<dynamic> route) => false);
+        }
+      });
+    }
+
+    return Scaffold(
+        appBar: AppBar(
+          title: Text(
+            "Finanças",
+            style: TextStyle(color: Colors.white),
+          ),
+          toolbarHeight: 100,
+        ),
+        body: StreamBuilder<QuerySnapshot>(
+          stream: repository.getFinanceStream(),
+          builder: (context, snapshot) {
+            if (!snapshot.hasData) return LinearProgressIndicator();
+            return _buildList(context, snapshot.data.documents);
+          },
+        ),
+        floatingActionButton: FloatingActionButton(
+          onPressed: () {
+            _addFinanceItem();
+          },
+          tooltip: "Add FinanceItems",
+          child: Icon(Icons.add),
+          backgroundColor: Colors.green,
+        ),
+        bottomNavigationBar: BottomNavigationBar(
+          items: const <BottomNavigationBarItem>[
+            BottomNavigationBarItem(
+                icon: Icon(Icons.track_changes),
+                label: 'Tarefas',
+                backgroundColor: Colors.white),
+            BottomNavigationBarItem(
+                icon: Icon(Icons.attach_money), label: 'Finança')
+          ],
+          currentIndex: _selectedIndex,
+          selectedItemColor: Colors.lightBlue,
+          onTap: _onItemTapped,
+        ));
+  }
+
+  Widget _buildList(BuildContext context, List<DocumentSnapshot> snapshot) {
+    return ListView(
+      padding: const EdgeInsets.only(top: 20.0),
+      children:
+          snapshot.map((data) => _buildListFinaceItem(context, data)).toList(),
+    );
   }
 
   Widget _buildListFinaceItem(BuildContext context, DocumentSnapshot snapshot) {
@@ -324,6 +393,8 @@ class _HomePageState extends State<HomePage> {
     );
   }
 }
+
+////////////////////////////////////////////////////////
 
 class AlertDialogTodoWidget extends StatefulWidget {
   String todoItem;
