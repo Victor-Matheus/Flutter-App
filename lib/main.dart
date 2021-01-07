@@ -96,6 +96,7 @@ class _TodoPageState extends State<TodoPage> {
             style: TextStyle(color: Colors.white),
           ),
           toolbarHeight: 100,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: repository.getTodoStream(),
@@ -112,18 +113,33 @@ class _TodoPageState extends State<TodoPage> {
           child: Icon(Icons.add),
           backgroundColor: Colors.green,
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-                icon: Icon(Icons.track_changes),
-                label: 'Tarefas',
-                backgroundColor: Colors.white),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.attach_money), label: 'Finança')
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.lightBlue,
-          onTap: _onItemTapped,
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                child: Text("Todo App", style: TextStyle(color: Colors.white),),
+                decoration: BoxDecoration(
+                  color: Colors.blue
+                ),
+              ),
+              ListTile(
+                title: Text('Tarefas'),
+                leading: Icon(Icons.track_changes, color: Colors.green,),
+                onTap: () => {
+                  Navigator.of(context).pushNamed('todo')
+                },
+                focusColor: Colors.red,
+              ),
+              ListTile(
+                title: Text('Finança'),
+                leading: Icon(Icons.attach_money),
+                onTap: () => {
+                  Navigator.of(context).pushNamed('finance')
+                },
+              )
+            ],
+          ),
         ));
   }
 
@@ -255,6 +271,7 @@ class _FinancePageState extends State<FinancePage> {
             style: TextStyle(color: Colors.white),
           ),
           toolbarHeight: 100,
+          iconTheme: IconThemeData(color: Colors.white),
         ),
         body: StreamBuilder<QuerySnapshot>(
           stream: repository.getFinanceStream(),
@@ -271,18 +288,32 @@ class _FinancePageState extends State<FinancePage> {
           child: Icon(Icons.add),
           backgroundColor: Colors.green,
         ),
-        bottomNavigationBar: BottomNavigationBar(
-          items: const <BottomNavigationBarItem>[
-            BottomNavigationBarItem(
-                icon: Icon(Icons.track_changes),
-                label: 'Tarefas',
-                backgroundColor: Colors.white),
-            BottomNavigationBarItem(
-                icon: Icon(Icons.attach_money), label: 'Finança')
-          ],
-          currentIndex: _selectedIndex,
-          selectedItemColor: Colors.lightBlue,
-          onTap: _onItemTapped,
+        drawer: Drawer(
+          child: ListView(
+            padding: EdgeInsets.zero,
+            children: <Widget>[
+              DrawerHeader(
+                child: Text("Todo App", style: TextStyle(color: Colors.white),),
+                decoration: BoxDecoration(
+                  color: Colors.blue
+                ),
+              ),
+              ListTile(
+                title: Text('Tarefas'),
+                leading: Icon(Icons.track_changes),
+                onTap: () => {
+                  Navigator.of(context).pushNamed('todo')
+                },
+              ),
+              ListTile(
+                title: Text('Finança'),
+                leading: Icon(Icons.attach_money, color: Colors.green,),
+                onTap: () => {
+                  Navigator.of(context).pushNamed('finance')
+                },
+              )
+            ],
+          ),
         ));
   }
 
